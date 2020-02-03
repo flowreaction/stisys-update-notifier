@@ -28,8 +28,7 @@ def getHtml():
         return ' '.join(r.text.split()) #r.text.replace('\n',' ')
 
 def parseHtml(rawHtml):
-    parsed = re.findall("""
-    ((?<=<td></td> <td>).+?(?=&nbsp))|((?<="right">).+?(?=</td>))""", rawHtml)
+    parsed = re.findall("""((?<=<td></td> <td>).+?(?=&nbsp))|((?<="right">).+?(?=</td>))""", rawHtml)
     formatted = []
     for x in parsed:
         for y in x:
@@ -41,7 +40,6 @@ def parseHtml(rawHtml):
 
 def listToDict(lst):
     op = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)}
-    print(op)
     return op
 
 def compareToPrevious(newData):
