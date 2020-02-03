@@ -9,6 +9,8 @@ password = 'Your HAW password'
 bot_token = 'your bot token from telegram'
 bot_chatid = 'your pesonal chat id from telegram'
 ```
+Your credentials will not be saved, they will be used in the POST request to the stisys website to get your specific results.
+
 
 You will need to create your own Telegram-Bot.
 To do so search for the BotFather on Telegram and type or press the /start command. The BotFather will explain the rest. Copy your API Token into the credentials.py 
