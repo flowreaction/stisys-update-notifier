@@ -13,7 +13,7 @@ import datetime
 import requests
 import credentials
 
-CURRENT_TIME = str(datetime.datetime.now())
+CURRENT_TIME = datetime.datetime.now().strftime("%Y-%m-%d @ %H:%M:%S")
 
 def get_html():
     """sends POST and GET request to stisys server
