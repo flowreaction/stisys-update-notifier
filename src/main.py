@@ -9,11 +9,15 @@ Date: 2.2.2020
 
 import re
 import json
+import os
 import datetime
 import requests
+
 import credentials
 
 CURRENT_TIME = datetime.datetime.now().strftime("%Y-%m-%d @ %H:%M:%S")
+PATH_TO_SCRIPT = os.path.dirname(os.path.realpath(__file__))
+PATH_TO_DATAFILE = os.path.join(PATH_TO_SCRIPT, "../datafile.json")
 
 def get_html():
     """sends POST and GET request to stisys server
@@ -83,21 +87,35 @@ def compare_to_previous(new_data):
         dict -- returns a dict of the differences of the new and previous data in format of
                 {course_a : grade_a, course_b : grade_b, ..., course_n : grade_n }
     """
+    differences = new_data
     try:
-        with open('./datafile.json', 'r') as file:
+        with open(PATH_TO_DATAFILE, 'r') as file:
             json_string = file.read()
             old_data = json.loads(json_string)
             differences = {k : new_data[k] for k in set(new_data) - set(old_data)}
 
     except IOError:
         print(CURRENT_TIME + ' -> File not found')
-        differences = None
+        try:
+            with open(PATH_TO_DATAFILE, 'w') as outfile:
+                print(CURRENT_TIME + ' -> Creating new file')
+                print(CURRENT_TIME + ' -> Writing data to file')
+                json_data = json.dumps(new_data)
+                outfile.write(json_data)
+        except IOError:
+            print(CURRENT_TIME + ' -> FILE CREATION ERROR')
+        finally:
+            differences = None
     finally:
-        with open('./datafile.json', 'w') as outfile:
-            print(CURRENT_TIME + ' -> Writing new data to file')
-            json_data = json.dumps(new_data)
-            outfile.write(json_data)
-            return differences
+        if differences:
+            with open(PATH_TO_DATAFILE, 'w') as outfile:
+                print(CURRENT_TIME + f' -> {len(differences)} Differences found')
+                print(CURRENT_TIME + ' -> Writing new data to file')
+                json_data = json.dumps(new_data)
+                outfile.write(json_data)
+        else:
+            print(CURRENT_TIME + ' -> No differences found')
+        return differences
 
 def telegram_bot_sendtext(bot_message):
     """Sends a formatted message to the telegram user with ID specified in credential.py
@@ -113,7 +131,7 @@ def telegram_bot_sendtext(bot_message):
     send_text = 'https://api.telegram.org/bot' + bot_token + \
         '/sendMessage?chat_id=' + bot_chat_id + '&parse_mode=Markdown&text=' + bot_message
     response = requests.get(send_text)
-    print(CURRENT_TIME + " -> Message sent through Telegram")
+    print(CURRENT_TIME + " -> Message sent to Telegram Chat")
     return response.json()
 
 def send_notification(diff):
@@ -129,14 +147,14 @@ def send_notification(diff):
         message = ''
         for k in diff:
             message += '- ' + str(k) + ': ' + diff[k] + '\n'
-        telegram_bot_sendtext('Hi!\nThese new grade(s) have I just found: \n\n' + message)
+        telegram_bot_sendtext('Hi!\nI just found this: \n\n' + message)
         print(CURRENT_TIME + " -> " + str(diff))
     else:
         pass
 
 if __name__ == "__main__":
-    raw = get_html()
-    PARSED_DATA = parse_html(raw)
+    RAW = get_html()
+    PARSED_DATA = parse_html(RAW)
     DATA_DICT = list_to_dict(PARSED_DATA)
     DIFFS = compare_to_previous(DATA_DICT)
     send_notification(DIFFS)
